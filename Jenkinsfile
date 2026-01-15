@@ -35,7 +35,7 @@ pipeline {
                     
                     // The 'returnStatus: true' allows us to capture the failure 
                     // without crashing the pipeline immediately, so we can print a custom message.
-                    def exitCode = bat(script: 'python sla_guardian.py GOOD_UPDATE.cbl', returnStatus: true)
+                    def exitCode = bat(script: 'python sla_guardian.py HEAVY_JOB.rexx', returnStatus: true)
 
                     if (exitCode == 1) {
                         error "BUILD FAILED: SLA Guardian detected a performance breach."
