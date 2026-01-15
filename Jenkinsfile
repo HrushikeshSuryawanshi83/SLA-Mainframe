@@ -4,46 +4,63 @@ pipeline {
     stages {
         stage('Checkout Code') {
             steps {
-                // In a real project, this pulls from GitHub.
-                // For this local POC, we just print a message.
-                echo 'Checking out code from repository...'
+                echo 'Checking out code...'
             }
         }
-
         stage('Setup Environment') {
             steps {
-                // Install necessary Python libraries
-                // Using 'bat' because you are on Windows
                 bat 'pip install pandas scikit-learn joblib'
             }
         }
-
         stage('Train AI Model') {
             steps {
-                // Train the model freshly for every build (for POC purposes)
-                echo 'Training the prediction model...'
                 bat 'python train_model.py'
             }
         }
-
         stage('SLA Guardian Check') {
             steps {
                 script {
-                    // This tries to run the Guardian on the BAD file first.
-                    // You can change 'BAD_UPDATE.cbl' to 'GOOD_UPDATE.cbl' to see it pass.
-                    echo 'Running Static SLA Analysis...'
-                    
-                    // The 'returnStatus: true' allows us to capture the failure 
-                    // without crashing the pipeline immediately, so we can print a custom message.
-                    def exitCode = bat(script: 'python sla_guardian.py HEAVY_JOB.rexx', returnStatus: true)
+                    // Running the check on your REXX file
+                    // returnStatus: true lets us capture the failure without crashing immediately
+                    def exitCode = bat(script: 'python sla_guardian.py BAD_UPDATE.cbl', returnStatus: true)
 
                     if (exitCode == 1) {
-                        error "BUILD FAILED: SLA Guardian detected a performance breach."
+                        // We mark the build as failed, but the 'post' block will handle the email
+                        error "⛔ SLA BREACH DETECTED: Prediction exceeded 100ms."
                     } else {
-                        echo "SLA CHECK PASSED: Code is safe to merge."
+                        echo "✅ SLA CHECK PASSED."
                     }
                 }
             }
+        }
+    }
+
+    // --- NEW: EMAIL NOTIFICATION BLOCK ---
+    post {
+        failure {
+            // This runs ONLY if the build fails (Red Bubble)
+            mail to: 'hrushikeshsuryawanshi832@gmail.com', // <--- CHANGE THIS TO YOUR EMAIL
+                 subject: "🚨 FAILED: SLA Guardian Alert - Build #${env.BUILD_NUMBER}",
+                 body: """
+                 The Static SLA Guardian detected a performance breach!
+                 
+                 --------------------------------------------------
+                 PROJECT: ${env.JOB_NAME}
+                 BUILD: #${env.BUILD_NUMBER}
+                 STATUS: FAILED (SLA Breach)
+                 --------------------------------------------------
+                 
+                 The AI predicted that your recent code changes will slow down the system 
+                 beyond the allowed 100ms threshold.
+                 
+                 Please review the attached logs and optimize your SQL/Loops.
+                 
+                 Link to Logs: ${env.BUILD_URL}
+                 """
+        }
+        success {
+            // Optional: Send an email on success too
+            echo 'Build Passed. No email sent.'
         }
     }
 }
