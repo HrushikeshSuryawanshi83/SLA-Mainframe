@@ -1,0 +1,30 @@
+name: SLA Guardian Check
+
+on: [push, pull_request]
+
+jobs:
+  performance-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: Install Dependencies
+        run: pip install pandas scikit-learn joblib
+
+      - name: Run Data Generation & Training (POC Only)
+        # In a real scenario, models are pre-trained. 
+        # Here we train them on the fly for the POC demo.
+        run: |
+          python generate_data.py
+          python train_model.py
+
+      - name: Run SLA Guardian
+        # This runs the check on a specific file. 
+        # In real life, you'd script this to loop through all changed files.
+        run: python sla_guardian.py UPDATE.cbl
