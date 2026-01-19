@@ -22,7 +22,7 @@ pipeline {
                 script {
                     // Running the check on your REXX file
                     // returnStatus: true lets us capture the failure without crashing immediately
-                    def exitCode = bat(script: 'python sla_guardian.py BAD_UPDATE.cbl', returnStatus: true)
+                    def exitCode = bat(script: 'python sla_guardian.py GOOD_UPDATE.cbl', returnStatus: true)
 
                     if (exitCode == 1) {
                         // We mark the build as failed, but the 'post' block will handle the email

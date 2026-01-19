@@ -10,7 +10,8 @@ time_model = joblib.load('time_model.pkl')
 # 2. Parse the Input File (Passed as command line argument)
 filename = sys.argv[1] 
 features = parse_cobol_code(filename)
-
+print('Printing the features')
+print(features)
 # Convert to DataFrame for prediction
 input_df = pd.DataFrame([features])
 
